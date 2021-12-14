@@ -60,13 +60,15 @@ func init() {
 }
 
 func recurse_through_directories(directory string) {
-	//
+	//TODO: Add a check to see if file is a symlink and ignore it.
+	//TODO: Recurse through directores only once all files have been processed in that directory
 	println("In directory" + directory)
 	if hashDb == nil {
 		hashDb = make(map[string]string)
 	}
 
 	files, err := ioutil.ReadDir(directory)
+	dirs := make([]string, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -86,8 +88,11 @@ func recurse_through_directories(directory string) {
 				hashDb[hash] = directory + f.Name()
 			}
 		} else {
-			recurse_through_directories(directory + f.Name() + "/")
+			dirs = append(dirs, directory+f.Name())
 		}
+	}
+	for _, d := range dirs {
+		recurse_through_directories(d + "/")
 	}
 }
 
