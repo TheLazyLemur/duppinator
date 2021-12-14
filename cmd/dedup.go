@@ -44,9 +44,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("dedup called")
-		dirs := get_directories_recursively("/home/dan/Workspace")
-		println(len(dirs))
-		files := get_all_files_in_directory(".")
+		files := get_all_files_in_directory("/home/dan/Workspace/")
 		has := make(map[string]string)
 		dups := make(map[string]string)
 
@@ -107,12 +105,14 @@ func compute_sha256(file string) string {
 func get_all_files_in_directory(dir string) []string {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		log.Fatal("failed to read file", err)
+		log.Fatal("failed to read files in directory", err)
 	}
 
 	var file_names []string
 	for _, f := range files {
-		file_names = append(file_names, f.Name())
+		if f.IsDir() == false {
+			file_names = append(file_names, dir+f.Name())
+		}
 	}
 
 	return file_names
