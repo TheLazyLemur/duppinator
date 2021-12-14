@@ -34,18 +34,15 @@ import (
 
 var (
 	hashDb map[string]string = nil
+	dir    string
 )
 
 // dedupCmd represents the dedup command
 var dedupCmd = &cobra.Command{
 	Use:   "dedup",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Recurse through directories and find duplicate files, replacing them with symlinks",
+	Long: `Recurse through directories and find duplicate files, replacing them with symlinks of the original file.
+	This command IS destructive and will replace files with symlinks... Use with caution.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("dedup called")
 		println("Starting")
@@ -53,22 +50,13 @@ to quickly create a Cobra application.`,
 			hashDb := make(map[string]string)
 			hashDb["helo"] = "helo"
 		}
-		recurse_through_directories("/home/dan/Pictures/")
+		recurse_through_directories(dir)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(dedupCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// dedupCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// dedupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	dedupCmd.Flags().StringVarP(&dir, "dir", "d", "", "Directory to start searching from.")
 }
 
 func recurse_through_directories(directory string) {
