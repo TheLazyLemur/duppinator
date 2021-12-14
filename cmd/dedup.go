@@ -71,6 +71,9 @@ func recurse_through_directories(directory string) {
 		panic(err)
 	}
 	for _, f := range files {
+		if f.Name()[0:1] == "." {
+			continue
+		}
 		if f.IsDir() == false {
 			hash := compute_sha256(directory + f.Name())
 			if hash != "" {
