@@ -32,6 +32,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	hashDb map[string]string = nil
+)
+
 // dedupCmd represents the dedup command
 var dedupCmd = &cobra.Command{
 	Use:   "dedup",
@@ -44,25 +48,12 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("dedup called")
-		files := get_all_files_in_directory("/home/dan/Workspace/")
-		has := make(map[string]string)
-		dups := make(map[string]string)
-
-		for _, file := range files {
-			h := compute_sha256(file)
-			if h == "" {
-				continue
-			}
-			if _, ok := has[h]; ok {
-				dups[h] = file
-				continue
-			}
-			has[h] = file
+		println("Starting")
+		if hashDb == nil {
+			hashDb := make(map[string]string)
+			hashDb["helo"] = "helo"
 		}
-
-		for _, file := range dups {
-			sym_link(file, has[compute_sha256(file)])
-		}
+		recurse_through_directories("/home/dan/Pictures/")
 	},
 }
 
@@ -78,6 +69,43 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// dedupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func recurse_through_directories(directory string) {
+	//
+	println("In directory" + directory)
+	if hashDb == nil {
+		hashDb = make(map[string]string)
+	}
+
+	files, err := ioutil.ReadDir(directory)
+	if err != nil {
+		panic(err)
+	}
+	for _, f := range files {
+		if f.IsDir() == false {
+			hash := compute_sha256(directory + f.Name())
+			if hash != "" {
+				if _, ok := hashDb[hash]; ok {
+					println("Dup found")
+					println("Original:" + hashDb[hash])
+					sym_link(directory+f.Name(), hashDb[hash])
+					continue
+				}
+				hashDb[hash] = directory + f.Name()
+			}
+		} else {
+			recurse_through_directories(directory + f.Name() + "/")
+		}
+	}
+}
+
+func sym_link(from string, to string) {
+	os.Remove(from)
+	err := os.Symlink(to, from)
+	if err != nil {
+		log.Fatal("Failed symlink", err)
+	}
 }
 
 func compute_sha256(file string) string {
@@ -100,44 +128,4 @@ func compute_sha256(file string) string {
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil))
-}
-
-func get_all_files_in_directory(dir string) []string {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		log.Fatal("failed to read files in directory", err)
-	}
-
-	var file_names []string
-	for _, f := range files {
-		if f.IsDir() == false {
-			file_names = append(file_names, dir+f.Name())
-		}
-	}
-
-	return file_names
-}
-
-func sym_link(from string, to string) {
-	os.Remove(to)
-	err := os.Symlink(from, to)
-	if err != nil {
-		log.Fatal("Failed symlink", err)
-	}
-}
-
-func get_directories_recursively(dir string) []string {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var dirs []string
-	for _, f := range files {
-		if f.IsDir() {
-			dirs = append(dirs, f.Name())
-		}
-	}
-
-	return dirs
 }
