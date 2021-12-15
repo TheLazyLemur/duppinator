@@ -46,10 +46,6 @@ var dedupCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("dedup called")
 		println("Starting")
-		if hashDb == nil {
-			hashDb := make(map[string]string)
-			hashDb["helo"] = "helo"
-		}
 		recurse_through_directories(dir)
 	},
 }
