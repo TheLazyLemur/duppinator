@@ -28,6 +28,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -73,11 +74,13 @@ func recurse_through_directories(directory string) {
 		}
 
 		if f.IsDir() {
-			dirs = append(dirs, directory+f.Name())
+			fp := filepath.Join(directory, f.Name())
+			dirs = append(dirs, fp)
 			continue
 		}
 
-		hash := compute_sha256(directory + f.Name())
+		fp := filepath.Join(directory, f.Name())
+		hash := compute_sha256(fp)
 		if hash == "" {
 			continue
 		}
@@ -85,14 +88,16 @@ func recurse_through_directories(directory string) {
 		if _, ok := hashDb[hash]; ok {
 			println("Dup found")
 			println("Original:" + hashDb[hash])
-			sym_link(directory+f.Name(), hashDb[hash])
+			fp := filepath.Join(directory, f.Name())
+			sym_link(fp, hashDb[hash])
 		} else {
-			hashDb[hash] = directory + f.Name()
+			fp := filepath.Join(directory, f.Name())
+			hashDb[hash] = fp
 		}
 	}
 
 	for _, d := range dirs {
-		recurse_through_directories(d + "/")
+		recurse_through_directories(d)
 	}
 }
 
@@ -101,7 +106,8 @@ func should_skip_file(file string, directory string) bool {
 		return true
 	}
 
-	fi, err := os.Lstat(directory + file)
+	fp := filepath.Join(directory, file)
+	fi, err := os.Lstat(fp)
 	if err != nil {
 		log.Fatal(err)
 	}
