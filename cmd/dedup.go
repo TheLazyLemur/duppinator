@@ -1,4 +1,5 @@
-/*Copyright © 2021 Dan Rousseau <danrousseau@protonmail.com>
+/*
+Copyright © 2021 Dan Rousseau <danrousseau@protonmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -56,13 +57,11 @@ var dedupCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(dedupCmd)
 	dedupCmd.Flags().StringVarP(&dir, "dir", "d", "", "Directory to start searching from.")
+	hashDb = make(map[string]string)
 }
 
 func recurse_through_directories(directory string) {
 	println("In directory" + directory)
-	if hashDb == nil {
-		hashDb = make(map[string]string)
-	}
 
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
@@ -95,6 +94,7 @@ func recurse_through_directories(directory string) {
 			hashDb[hash] = directory + f.Name()
 		}
 	}
+
 	for _, d := range dirs {
 		recurse_through_directories(d + "/")
 	}
@@ -124,7 +124,6 @@ func sym_link(from string, to string) {
 }
 
 func compute_sha256(file string) string {
-
 	fileToOpen, err := os.Open(file)
 	fileInfo, err := fileToOpen.Stat()
 	if err != nil {
