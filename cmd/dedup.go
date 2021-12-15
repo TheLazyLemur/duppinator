@@ -1,5 +1,4 @@
-/*
-Copyright © 2021 Dan Rousseau <danrousseau@protonmail.com>
+/*Copyright © 2021 Dan Rousseau <danrousseau@protonmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,8 +59,6 @@ func init() {
 }
 
 func recurse_through_directories(directory string) {
-	//TODO: Add a check to see if file is a symlink and ignore it.
-	//TODO: Recurse through directores only once all files have been processed in that directory
 	println("In directory" + directory)
 	if hashDb == nil {
 		hashDb = make(map[string]string)
@@ -73,9 +70,19 @@ func recurse_through_directories(directory string) {
 		panic(err)
 	}
 	for _, f := range files {
+
 		if f.Name()[0:1] == "." {
 			continue
 		}
+
+		fi, err := os.Lstat(directory + f.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+		if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+			continue
+		}
+
 		if f.IsDir() == false {
 			hash := compute_sha256(directory + f.Name())
 			if hash != "" {
