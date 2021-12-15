@@ -77,19 +77,22 @@ func recurse_through_directories(directory string) {
 			continue
 		}
 
-		if f.IsDir() == false {
-			hash := compute_sha256(directory + f.Name())
-			if hash != "" {
-				if _, ok := hashDb[hash]; ok {
-					println("Dup found")
-					println("Original:" + hashDb[hash])
-					sym_link(directory+f.Name(), hashDb[hash])
-					continue
-				}
-				hashDb[hash] = directory + f.Name()
-			}
-		} else {
+		if f.IsDir() {
 			dirs = append(dirs, directory+f.Name())
+			continue
+		}
+
+		hash := compute_sha256(directory + f.Name())
+		if hash == "" {
+			continue
+		}
+
+		if _, ok := hashDb[hash]; ok {
+			println("Dup found")
+			println("Original:" + hashDb[hash])
+			sym_link(directory+f.Name(), hashDb[hash])
+		} else {
+			hashDb[hash] = directory + f.Name()
 		}
 	}
 	for _, d := range dirs {
