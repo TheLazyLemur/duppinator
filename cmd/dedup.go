@@ -65,21 +65,15 @@ func recurse_through_directories(directory string) {
 	}
 
 	files, err := ioutil.ReadDir(directory)
-	dirs := make([]string, 0)
 	if err != nil {
 		panic(err)
 	}
+
+	dirs := make([]string, 0)
+
 	for _, f := range files {
 
-		if f.Name()[0:1] == "." {
-			continue
-		}
-
-		fi, err := os.Lstat(directory + f.Name())
-		if err != nil {
-			log.Fatal(err)
-		}
-		if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+		if should_skip_file(f.Name(), directory) {
 			continue
 		}
 
@@ -101,6 +95,21 @@ func recurse_through_directories(directory string) {
 	for _, d := range dirs {
 		recurse_through_directories(d + "/")
 	}
+}
+
+func should_skip_file(file string, directory string) bool {
+	if file[0:1] == "." {
+		return true
+	}
+
+	fi, err := os.Lstat(directory + file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+		return true
+	}
+	return false
 }
 
 func sym_link(from string, to string) {
